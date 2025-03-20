@@ -486,10 +486,10 @@ class FastMCP:
                 request.scope,
                 request.receive,
                 request._send,  # type: ignore[reportPrivateUsage]
-            ) as streams:
+            ) as (read_stream, write_stream, _):
                 await self._mcp_server.run(
-                    streams[0],
-                    streams[1],
+                    read_stream,
+                    write_stream,
                     self._mcp_server.create_initialization_options(),
                 )
 

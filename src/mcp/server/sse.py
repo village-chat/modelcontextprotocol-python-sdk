@@ -33,7 +33,7 @@ See SseServerTransport class documentation for more details.
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, AsyncGenerator
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
@@ -79,7 +79,16 @@ class SseServerTransport:
         logger.debug(f"SseServerTransport initialized with endpoint: {endpoint}")
 
     @asynccontextmanager
-    async def connect_sse(self, scope: Scope, receive: Receive, send: Send):
+    async def connect_sse(
+        self, scope: Scope, receive: Receive, send: Send
+    ) -> AsyncGenerator[
+        tuple[
+            MemoryObjectReceiveStream[types.JSONRPCMessage | Exception],
+            MemoryObjectSendStream[types.JSONRPCMessage],
+            UUID,
+        ],
+        None,
+    ]:
         if scope["type"] != "http":
             logger.error("connect_sse received non-HTTP request")
             raise ValueError("connect_sse can only handle HTTP requests")
@@ -128,7 +137,7 @@ class SseServerTransport:
             tg.start_soon(response, scope, receive, send)
 
             logger.debug("Yielding read and write streams")
-            yield (read_stream, write_stream)
+            yield (read_stream, write_stream, session_id)
 
     async def handle_post_message(
         self, scope: Scope, receive: Receive, send: Send

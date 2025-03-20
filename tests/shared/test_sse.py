@@ -86,9 +86,9 @@ def make_server_app() -> Starlette:
     async def handle_sse(request: Request) -> None:
         async with sse.connect_sse(
             request.scope, request.receive, request._send
-        ) as streams:
+        ) as (read_stream, write_stream, session_id):
             await server.run(
-                streams[0], streams[1], server.create_initialization_options()
+                read_stream, write_stream, server.create_initialization_options()
             )
 
     app = Starlette(
